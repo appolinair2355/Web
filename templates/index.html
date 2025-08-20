@@ -2,44 +2,28 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Inscriptions Scolaires</title>
+    <title>École Mont Sion de Bapkerou</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <h1>Gestion des Inscriptions Scolaires</h1>
+        <h1>🏫 École Mont Sion de Bapkerou</h1>
         <div class="nav-links">
-            <a href="{{ url_for('register') }}">Nouvelle Inscription</a>
-            <a href="{{ url_for('students') }}">Liste des Élèves</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">📋 Inscription</a>
+            <a href="{{ url_for('scolarite') }}" class="btn btn-success">💰 Gestion des Scolarités</a>
+            <a href="{{ url_for('students') }}">📚 Liste des élèves</a>
         </div>
     </nav>
 
     <main class="container">
         <div class="hero">
-            <h2>Bienvenue dans le système de gestion des inscriptions</h2>
-            <p>Gérez facilement les inscriptions des écoliers (Maternelle à CM2) et des collégiens (6ème à 3ème)</p>
-            
-            <div class="features">
-                <div class="feature-card">
-                    <h3>📋 Inscription</h3>
-                    <p>Inscrivez de nouveaux élèves avec toutes leurs informations</p>
-                </div>
-                <div class="feature-card">
-                    <h3>📚 Gestion des classes</h3>
-                    <p>Séparation automatique entre primaire et secondaire</p>
-                </div>
-                <div class="feature-card">
-                    <h3>💰 Suivi des paiements</h3>
-                    <p>Suivez les frais de scolarité et les paiements</p>
-                </div>
-                <div class="feature-card">
-                    <h3>🔍 Recherche</h3>
-                    <p>Trouvez rapidement un élève par son nom ou prénom</p>
-                </div>
+            <h2>Bienvenue à l'École Mont Sion de Bapkerou</h2>
+            <p>Primaire publique • Secondaire privé • Gestion moderne des inscriptions et paiements</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('register') }}" class="btn-large btn-primary">📋 Inscrire un élève</a>
+                <a href="{{ url_for('scolarite') }}" class="btn-large btn-success">💰 Voir les scolarités</a>
             </div>
         </div>
     </main>
 </body>
-  </html>
-  
+</html>
