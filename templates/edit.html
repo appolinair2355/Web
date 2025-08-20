@@ -2,63 +2,32 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifier Élève</title>
+    <title>Modifier - Mont Sion de Bapkerou</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <h1>Modifier les informations</h1>
-        <a href="{{ url_for('students') }}">← Retour</a>
+        <h1>✏️ Modifier - Mont Sion de Bapkerou</h1>
+        <a href="{{ url_for('scolarite') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        <form method="POST" action="{{ url_for('update', student_id=student.id) }}" class="registration-form">
-            <div class="form-group">
-                <label for="nom">Nom :</label>
-                <input type="text" id="nom" name="nom" value="{{ student.nom }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="prenoms">Prénoms :</label>
-                <input type="text" id="prenoms" name="prenoms" value="{{ student.prenoms }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="classe">Classe :</label>
-                <select id="classe" name="classe" required>
-                    <option value="MATERNELLE" {% if student.classe == 'MATERNELLE' %}selected{% endif %}>MATERNELLE</option>
-                    <option value="CP" {% if student.classe == 'CP' %}selected{% endif %}>CP</option>
-                    <option value="CE1" {% if student.classe == 'CE1' %}selected{% endif %}>CE1</option>
-                    <option value="CE2" {% if student.classe == 'CE2' %}selected{% endif %}>CE2</option>
-                    <option value="CM1" {% if student.classe == 'CM1' %}selected{% endif %}>CM1</option>
-                    <option value="CM2" {% if student.classe == 'CM2' %}selected{% endif %}>CM2</option>
-                    <option value="6ème" {% if student.classe == '6ème' %}selected{% endif %}>6ème</option>
-                    <option value="5ème" {% if student.classe == '5ème' %}selected{% endif %}>5ème</option>
-                    <option value="4ème" {% if student.classe == '4ème' %}selected{% endif %}>4ème</option>
-                    <option value="3ème" {% if student.classe == '3ème' %}selected{% endif %}>3ème</option>
+        <form method="POST" class="registration-form">
+            <div class="form-group"><label>Nom :</label><input type="text" name="nom" value="{{ student.nom }}" required></div>
+            <div class="form-group"><label>Prénoms :</label><input type="text" name="prenoms" value="{{ student.prenoms }}" required></div>
+            <div class="form-group"><label>Classe :</label>
+                <select name="classe" required>
+                    {% set classes = ['MATERNELLE','CP','CE1','CE2','CM1','CM2','6ème','5ème','4ème','3ème'] %}
+                    {% for c in classes %}
+                    <option value="{{ c }}" {% if student.classe == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
                 </select>
             </div>
-
-            <div class="form-group">
-                <label for="date_naissance">Date de naissance :</label>
-                <input type="date" id="date_naissance" name="date_naissance" value="{{ student.date_naissance }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="parent_phone">Numéro du parent ou tuteur :</label>
-                <input type="tel" id="parent_phone" name="parent_phone" value="{{ student.parent_phone }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="frais_scolarite">Frais de scolarité (FCFA) :</label>
-                <input type="number" id="frais_scolarite" name="frais_scolarite" 
-                       value="{{ student.frais_scolarite.total }}" min="0" step="1000" required>
-            </div>
-
+            <div class="form-group"><label>Date de naissance :</label><input type="date" name="date_naissance" value="{{ student.date_naissance }}" required></div>
+            <div class="form-group"><label>Téléphone :</label><input type="tel" name="parent_phone" value="{{ student.parent_phone }}" required></div>
+            <div class="form-group"><label>Frais (FCFA) :</label><input type="number" name="frais_scolarite" value="{{ student.frais_scolarite.total }}" required></div>
             <button type="submit" class="btn btn-primary">Mettre à jour</button>
         </form>
     </main>
 </body>
-  </html>
-                  
+</html>
