@@ -2,84 +2,41 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Élèves</title>
+    <title>Liste des élèves - Mont Sion de Bapkerou</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <h1>Liste des Élèves</h1>
+        <h1>📚 Liste des élèves - Mont Sion de Bapkerou</h1>
         <a href="{{ url_for('index') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        <div class="search-section">
-            <input type="text" id="searchInput" placeholder="Rechercher par nom ou prénom..." class="search-input">
-            <div id="searchResults"></div>
+        <h2>🎒 Primaire (Public)</h2>
+        <div class="students-grid">
+            {% for s in primaire %}
+            <div class="student-card">
+                <h3>{{ s.prenoms }} {{ s.nom }}</h3>
+                <p><strong>Classe :</strong> {{ s.classe }}</p>
+                <p><strong>Parent :</strong> {{ s.parent_phone }}</p>
+                <p><strong>Frais :</strong> {{ s.frais_scolarite.total }} FCFA</p>
+                <a href="{{ url_for('edit', student_id=s.id) }}" class="btn btn-edit">✏️ Modifier</a>
+            </div>
+            {% endfor %}
         </div>
 
-        <section class="students-section">
-            <h2>🎒 Primaire (Maternelle - CM2)</h2>
-            <div class="students-grid">
-                {% for student in primaire %}
-                <div class="student-card">
-                    <h3>{{ student.prenoms }} {{ student.nom }}</h3>
-                    <p><strong>Classe :</strong> {{ student.classe }}</p>
-                    <p><strong>Né(e) le :</strong> {{ student.date_naissance }}</p>
-                    <p><strong>Parent :</strong> {{ student.parent_phone }}</p>
-                    <div class="fees-info">
-                        <p><strong>Frais total :</strong> {{ student.frais_scolarite.total }} FCFA</p>
-                        <p><strong>Payé :</strong> {{ student.frais_scolarite.paye }} FCFA</p>
-                        <p><strong>Reste :</strong> <span class="remaining">{{ student.frais_scolarite.reste }} FCFA</span></p>
-                    </div>
-                    <div class="actions">
-                        <a href="{{ url_for('edit', student_id=student.id) }}" class="btn btn-edit">Modifier</a>
-                        <button onclick="showPaymentModal('{{ student.id }}', '{{ student.prenoms }} {{ student.nom }}')" class="btn btn-pay">Payer</button>
-                    </div>
-                </div>
-                {% endfor %}
+        <h2>🏫 Secondaire (Privé)</h2>
+        <div class="students-grid">
+            {% for s in secondaire %}
+            <div class="student-card">
+                <h3>{{ s.prenoms }} {{ s.nom }}</h3>
+                <p><strong>Classe :</strong> {{ s.classe }}</p>
+                <p><strong>Parent :</strong> {{ s.parent_phone }}</p>
+                <p><strong>Frais :</strong> {{ s.frais_scolarite.total }} FCFA</p>
+                <a href="{{ url_for('edit', student_id=s.id) }}" class="btn btn-edit">✏️ Modifier</a>
             </div>
-        </section>
-
-        <section class="students-section">
-            <h2>🏫 Secondaire (6ème - 3ème)</h2>
-            <div class="students-grid">
-                {% for student in secondaire %}
-                <div class="student-card">
-                    <h3>{{ student.prenoms }} {{ student.nom }}</h3>
-                    <p><strong>Classe :</strong> {{ student.classe }}</p>
-                    <p><strong>Né(e) le :</strong> {{ student.date_naissance }}</p>
-                    <p><strong>Parent :</strong> {{ student.parent_phone }}</p>
-                    <div class="fees-info">
-                        <p><strong>Frais total :</strong> {{ student.frais_scolarite.total }} FCFA</p>
-                        <p><strong>Payé :</strong> {{ student.frais_scolarite.paye }} FCFA</p>
-                        <p><strong>Reste :</strong> <span class="remaining">{{ student.frais_scolarite.reste }} FCFA</span></p>
-                    </div>
-                    <div class="actions">
-                        <a href="{{ url_for('edit', student_id=student.id) }}" class="btn btn-edit">Modifier</a>
-                        <button onclick="showPaymentModal('{{ student.id }}', '{{ student.prenoms }} {{ student.nom }}')" class="btn btn-pay">Payer</button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
+            {% endfor %}
+        </div>
     </main>
-
-    <!-- Modal de paiement -->
-    <div id="paymentModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Paiement pour <span id="studentName"></span></h3>
-            <form id="paymentForm" method="POST">
-                <div class="form-group">
-                    <label for="paymentAmount">Montant à payer (FCFA) :</label>
-                    <input type="number" id="paymentAmount" name="montant" min="1000" step="1000" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Confirmer le paiement</button>
-            </form>
-        </div>
-    </div>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
