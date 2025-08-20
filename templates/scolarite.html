@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Scolarités - Mont Sion de Bapkerou</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>💰 Gestion des Scolarités - Mont Sion de Bapkerou</h1>
+        <a href="{{ url_for('index') }}">← Retour</a>
+    </nav>
+
+    <main class="container">
+        <h2>📊 Tableau des paiements</h2>
+
+        <section>
+            <h3>🎒 Primaire (Public)</h3>
+            <table class="fees-table">
+                <thead>
+                    <tr>
+                        <th>Nom & Prénoms</th>
+                        <th>Classe</th>
+                        <th>Total</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in primaire %}
+                    <tr id="row-{{ student.id }}">
+                        <td>{{ student.prenoms }} {{ student.nom }}</td>
+                        <td>{{ student.classe }}</td>
+                        <td>{{ student.frais_scolarite.total }} FCFA</td>
+                        <td class="paye">{{ student.frais_scolarite.paye }} FCFA</td>
+                        <td class="reste">{{ student.frais_scolarite.reste }} FCFA</td>
+                        <td><button onclick="openPayModal('{{ student.id }}', '{{ student.prenoms }} {{ student.nom }}')" class="btn-pay-small">💸 Payer</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>🏫 Secondaire (Privé)</h3>
+            <table class="fees-table">
+                <thead>
+                    <tr>
+                        <th>Nom & Prénoms</th>
+                        <th>Classe</th>
+                        <th>Total</th>
+                        <th>Payé</th>
+                        <th>Reste</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in secondaire %}
+                    <tr id="row-{{ student.id }}">
+                        <td>{{ student.prenoms }} {{ student.nom }}</td>
+                        <td>{{ student.classe }}</td>
+                        <td>{{ student.frais_scolarite.total }} FCFA</td>
+                        <td class="paye">{{ student.frais_scolarite.paye }} FCFA</td>
+                        <td class="reste">{{ student.frais_scolarite.reste }} FCFA</td>
+                        <td><button onclick="openPayModal('{{ student.id }}', '{{ student.prenoms }} {{ student.nom }}')" class="btn-pay-small">💸 Payer</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Modal de paiement -->
+    <div id="payModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Paiement pour <span id="modalStudentName"></span></h3>
+            <form id="payForm">
+                <label>Montant à payer (FCFA) :</label>
+                <input type="number" id="payAmount" min="1000" step="1000" required>
+                <button type="submit" class="btn btn-primary">Confirmer</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/scolarite.js') }}"></script>
+</body>
+</html>
