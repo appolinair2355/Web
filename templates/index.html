@@ -7,11 +7,13 @@
 </head>
 <body>
     <nav class="navbar">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
         <h1>🏫 École Mont Sion de Bapkerou</h1>
-        <div class="nav-links">
+        <div>
             <a href="{{ url_for('register') }}" class="btn btn-primary">📋 Inscription</a>
-            <a href="{{ url_for('scolarite') }}" class="btn btn-success">💰 Gestion des Scolarités</a>
-            <a href="{{ url_for('students') }}">📚 Liste des élèves</a>
+            <a href="{{ url_for('students') }}" class="btn btn-info">📚 Élèves</a>
+            <a href="/export" class="btn btn-success">📥 Export</a>
+            <a href="{{ url_for('import') }}" class="btn btn-warning">📤 Import</a>
         </div>
     </nav>
 
@@ -21,7 +23,7 @@
             <p>Primaire publique • Secondaire privé • Gestion moderne des inscriptions et paiements</p>
             <div class="cta-buttons">
                 <a href="{{ url_for('register') }}" class="btn-large btn-primary">📋 Inscrire un élève</a>
-                <a href="{{ url_for('scolarite') }}" class="btn-large btn-success">💰 Voir les scolarités</a>
+                <a href="{{ url_for('students') }}" class="btn-large btn-info">📚 Voir les élèves</a>
             </div>
         </div>
     </main>
