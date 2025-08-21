@@ -2,41 +2,99 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Liste des élèves - Mont Sion de Bapkerou</title>
+    <title>Élèves par classe - Mont Sion de Bapkerou</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <h1>📚 Liste des élèves - Mont Sion de Bapkerou</h1>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
+        <h1>📚 Élèves par classe - Mont Sion de Bapkerou</h1>
         <a href="{{ url_for('index') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        <h2>🎒 Primaire (Public)</h2>
-        <div class="students-grid">
-            {% for s in primaire %}
-            <div class="student-card">
-                <h3>{{ s.prenoms }} {{ s.nom }}</h3>
-                <p><strong>Classe :</strong> {{ s.classe }}</p>
-                <p><strong>Parent :</strong> {{ s.parent_phone }}</p>
-                <p><strong>Frais :</strong> {{ s.frais_scolarite.total }} FCFA</p>
-                <a href="{{ url_for('edit', student_id=s.id) }}" class="btn btn-edit">✏️ Modifier</a>
-            </div>
-            {% endfor %}
-        </div>
-
-        <h2>🏫 Secondaire (Privé)</h2>
-        <div class="students-grid">
-            {% for s in secondaire %}
-            <div class="student-card">
-                <h3>{{ s.prenoms }} {{ s.nom }}</h3>
-                <p><strong>Classe :</strong> {{ s.classe }}</p>
-                <p><strong>Parent :</strong> {{ s.parent_phone }}</p>
-                <p><strong>Frais :</strong> {{ s.frais_scolarite.total }} FCFA</p>
-                <a href="{{ url_for('edit', student_id=s.id) }}" class="btn btn-edit">✏️ Modifier</a>
-            </div>
-            {% endfor %}
-        </div>
+        {% for classe, students in grouped.items() %}
+        {% if students %}
+        <section>
+            <h2>{{ classe }}</h2>
+            <table class="fees-table">
+                <thead>
+                    <tr>
+                        <th>Nom & Prénoms</th>
+                        <th>Date naissance</th>
+                        <th>Parent</th>
+                        <th>Frais</th>
+                        <th>Enregistré par</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr id="row-{{ s.id }}">
+                        <td>{{ s.prenoms }} {{ s.nom }}</td>
+                        <td>{{ s.date_naissance }}</td>
+                        <td>{{ s.parent_phone }}</td>
+                        <td>{{ s.frais_scolarite }} FCFA</td>
+                        <td>
+                            {{ s.utilisateur.maitre or '' }}
+                            {{ s.utilisateur.professeur or '' }}
+                            {{ s.utilisateur.directrice or '' }}
+                        </td>
+                        <td>
+                            <button onclick="openDeleteModal('{{ s.id }}')" class="btn btn-danger btn-sm">🗑️</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+        {% endfor %}
     </main>
+
+    <!-- Modal suppression -->
+    <div id="deleteModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span onclick="closeDeleteModal()" style="float:right; cursor:pointer;">&times;</span>
+            <h3>Supprimer l’élève ?</h3>
+            <p>Mot de passe : <input type="password" id="deletePassword" placeholder="Mot de passe"></p>
+            <button onclick="confirmDelete()" class="btn btn-danger">Confirmer</button>
+            <button onclick="closeDeleteModal()" class="btn btn-secondary">Annuler</button>
+            <p id="deleteError" style="color:red; margin-top:1rem;"></p>
+        </div>
+    </div>
+
+    <script>
+    let deleteStudentId = null;
+
+    function openDeleteModal(id) {
+        deleteStudentId = id;
+        document.getElementById('deleteModal').style.display = 'block';
+        document.getElementById('deletePassword').value = '';
+        document.getElementById('deleteError').textContent = '';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    function confirmDelete() {
+        const pwd = document.getElementById('deletePassword').value;
+        fetch(`/delete/${deleteStudentId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: pwd})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                document.getElementById('deleteError').textContent = data.message;
+            }
+        });
+    }
+    </script>
 </body>
-</html>
+                </html>
+                            
