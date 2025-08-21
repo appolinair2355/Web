@@ -1,26 +1,24 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-import yaml
-import os
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
+import yaml, uuid, pandas as pd
+from io import BytesIO
 from datetime import datetime
-import uuid
+import os
 
 app = Flask(__name__)
-
 DATABASE_FILE = 'database.yaml'
 PORT = int(os.environ.get('PORT', 10000))
 
 def init_database():
     if not os.path.exists(DATABASE_FILE):
-        data = {'primaire': [], 'secondaire': [], 'paiements': {}}
-        save_data(data)
+        save_data({'primaire': [], 'secondaire': [], 'paiements': {}})
 
 def load_data():
-    with open(DATABASE_FILE, 'r', encoding='utf-8') as file:
-        return yaml.safe_load(file)
+    with open(DATABASE_FILE, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
 
 def save_data(data):
-    with open(DATABASE_FILE, 'w', encoding='utf-8') as file:
-        yaml.dump(data, file, allow_unicode=True, default_flow_style=False)
+    with open(DATABASE_FILE, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, allow_unicode=True)
 
 @app.route('/')
 def index():
@@ -28,6 +26,7 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
     if request.method == 'POST':
         data = load_data()
         student = {
@@ -37,89 +36,94 @@ def register():
             'classe': request.form['classe'],
             'date_naissance': request.form['date_naissance'],
             'parent_phone': request.form['parent_phone'],
-            'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'frais_scolarite': {
-                'total': float(request.form['frais_scolarite']),
-                'paye': 0.0,
-                'reste': float(request.form['frais_scolarite'])
-            }
+            'frais_scolarite': float(request.form['frais_scolarite']),
+            'utilisateur': {
+                'maitre': request.form.get('maitre', ''),
+                'professeur': request.form.get('professeur', ''),
+                'directrice': request.form.get('directrice', '')
+            },
+            'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
-        classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
         group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
+        data.setdefault(group, [])
         data[group].append(student)
+        data.setdefault('paiements', {})
         data['paiements'][student['id']] = []
         save_data(data)
-        return redirect(url_for('students'))
+        return redirect(url_for('students', saved='ok'))
     return render_template('register.html')
 
 @app.route('/students')
 def students():
     data = load_data()
-    return render_template('students.html', primaire=data['primaire'], secondaire=data['secondaire'])
+    classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
+    classes_secondaire = ['6ème', '5ème', '4ème', '3ème']
+    grouped = {}
+    for cls in classes_primaire + classes_secondaire:
+        grouped[cls] = [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls]
+    return render_template('students.html', grouped=grouped)
 
-@app.route('/scolarite')
-def scolarite():
+@app.route('/export')
+def export_excel():
     data = load_data()
-    return render_template('scolarite.html', primaire=data['primaire'], secondaire=data['secondaire'])
+    all_students = data['primaire'] + data['secondaire']
+    df = pd.json_normalize(all_students)
+    df_fees = pd.json_normalize(df['frais_scolarite'])
+    df = pd.concat([df.drop('frais_scolarite', axis=1), df_fees], axis=1)
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Inscriptions')
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
 
-@app.route('/edit/<student_id>')
-def edit(student_id):
+@app.route('/import', methods=['GET', 'POST'])
+def import_excel():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and file.filename.endswith('.xlsx'):
+            df = pd.read_excel(file)
+            data = {'primaire': [], 'secondaire': [], 'paiements': {}}
+            for _, row in df.iterrows():
+                student = {
+                    'id': str(uuid.uuid4()),
+                    'nom': str(row.get('nom', '')).upper(),
+                    'prenoms': str(row.get('prenoms', '')).title(),
+                    'classe': str(row.get('classe', '')),
+                    'date_naissance': str(row.get('date_naissance', '')),
+                    'parent_phone': str(row.get('parent_phone', '')),
+                    'frais_scolarite': float(row.get('frais_scolarite', 0)),
+                    'utilisateur': {
+                        'maitre': str(row.get('maitre', '')),
+                        'professeur': str(row.get('professeur', '')),
+                        'directrice': str(row.get('directrice', ''))
+                    },
+                    'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                group = 'primaire' if student['classe'].upper() in ['MATERNELLE','CP','CE1','CE2','CM1','CM2'] else 'secondaire'
+                data[group].append(student)
+                data['paiements'][student['id']] = []
+            save_data(data)
+            return redirect(url_for('students'))
+    return render_template('import.html')
+
+@app.route('/delete/<student_id>', methods=['POST'])
+def delete_student(student_id):
+    password = request.json.get('password')
+    if password != 'arrow':
+        return jsonify({'success': False, 'message': 'Vous n\'êtes pas autorisé à supprimer.'})
     data = load_data()
+    deleted = False
     for group in ['primaire', 'secondaire']:
-        for s in data[group]:
-            if s['id'] == student_id:
-                return render_template('edit.html', student=s)
-    return "Élève non trouvé", 404
-
-@app.route('/update/<student_id>', methods=['POST'])
-def update(student_id):
-    data = load_data()
-    for group in ['primaire', 'secondaire']:
-        for i, s in enumerate(data[group]):
-            if s['id'] == student_id:
-                s['nom'] = request.form['nom'].upper()
-                s['prenoms'] = request.form['prenoms'].title()
-                s['classe'] = request.form['classe']
-                s['date_naissance'] = request.form['date_naissance']
-                s['parent_phone'] = request.form['parent_phone']
-                nouveau_frais = float(request.form['frais_scolarite'])
-                s['frais_scolarite']['total'] = nouveau_frais
-                s['frais_scolarite']['reste'] = nouveau_frais - s['frais_scolarite']['paye']
-                save_data(data)
-                return redirect(url_for('scolarite'))
-    return "Élève non trouvé", 404
-
-@app.route('/api/payer/<student_id>', methods=['POST'])
-def api_payer(student_id):
-    data = load_data()
-    student = None
-    for group in ['primaire', 'secondaire']:
-        for s in data[group]:
-            if s['id'] == student_id:
-                student = s
-                break
-    if not student:
-        return jsonify({'error': 'Élève non trouvé'}), 404
-
-    montant = float(request.json.get('montant', 0))
-    if montant <= 0:
-        return jsonify({'error': 'Montant invalide'}), 400
-
-    student['frais_scolarite']['paye'] += montant
-    student['frais_scolarite']['reste'] -= montant
-    data['paiements'][student_id].append({
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'montant': montant
-    })
-    save_data(data)
-
-    return jsonify({
-        'success': True,
-        'paye': student['frais_scolarite']['paye'],
-        'reste': student['frais_scolarite']['reste']
-    })
+        original = len(data[group])
+        data[group] = [s for s in data[group] if s['id'] != student_id]
+        if len(data[group]) < original:
+            deleted = True
+    if deleted:
+        data['paiements'].pop(student_id, None)
+        save_data(data)
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'message': 'Élève introuvable.'})
 
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
-        
