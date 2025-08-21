@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
-import yaml, uuid, pandas as pd
+import yaml, uuid
+import xlsxwriter, xlrd2
 from io import BytesIO
 from datetime import datetime
 import os
@@ -67,12 +68,27 @@ def students():
 def export_excel():
     data = load_data()
     all_students = data['primaire'] + data['secondaire']
-    df = pd.json_normalize(all_students)
-    df_fees = pd.json_normalize(df['frais_scolarite'])
-    df = pd.concat([df.drop('frais_scolarite', axis=1), df_fees], axis=1)
+
     buffer = BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Inscriptions')
+    wb = xlsxwriter.Workbook(buffer, {'in_memory': True})
+    ws = wb.add_worksheet('Inscriptions')
+
+    headers = ['Nom', 'Prénoms', 'Classe', 'Date naissance', 'Parent', 'Frais', 'Maître', 'Professeur', 'Directrice']
+    for col, h in enumerate(headers):
+        ws.write(0, col, h)
+
+    for row, s in enumerate(all_students, start=1):
+        ws.write(row, 0, s['nom'])
+        ws.write(row, 1, s['prenoms'])
+        ws.write(row, 2, s['classe'])
+        ws.write(row, 3, s['date_naissance'])
+        ws.write(row, 4, s['parent_phone'])
+        ws.write(row, 5, s['frais_scolarite'])
+        ws.write(row, 6, s['utilisateur'].get('maitre', ''))
+        ws.write(row, 7, s['utilisateur'].get('professeur', ''))
+        ws.write(row, 8, s['utilisateur'].get('directrice', ''))
+
+    wb.close()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
 
@@ -81,29 +97,37 @@ def import_excel():
     if request.method == 'POST':
         file = request.files['file']
         if file and file.filename.endswith('.xlsx'):
-            df = pd.read_excel(file)
+            import xlrd2
+            wb = xlrd2.open_workbook(file_contents=file.read())
+            ws = wb.sheet_by_index(0)
+
             data = {'primaire': [], 'secondaire': [], 'paiements': {}}
-            for _, row in df.iterrows():
+            classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
+
+            for row_idx in range(1, ws.nrows):
+                row = ws.row(row_idx)
                 student = {
                     'id': str(uuid.uuid4()),
-                    'nom': str(row.get('nom', '')).upper(),
-                    'prenoms': str(row.get('prenoms', '')).title(),
-                    'classe': str(row.get('classe', '')),
-                    'date_naissance': str(row.get('date_naissance', '')),
-                    'parent_phone': str(row.get('parent_phone', '')),
-                    'frais_scolarite': float(row.get('frais_scolarite', 0)),
+                    'nom': str(row[0].value).upper(),
+                    'prenoms': str(row[1].value).title(),
+                    'classe': str(row[2].value),
+                    'date_naissance': str(row[3].value),
+                    'parent_phone': str(row[4].value),
+                    'frais_scolarite': float(row[5].value),
                     'utilisateur': {
-                        'maitre': str(row.get('maitre', '')),
-                        'professeur': str(row.get('professeur', '')),
-                        'directrice': str(row.get('directrice', ''))
+                        'maitre': str(row[6].value) if len(row) > 6 else '',
+                        'professeur': str(row[7].value) if len(row) > 7 else '',
+                        'directrice': str(row[8].value) if len(row) > 8 else ''
                     },
                     'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 }
-                group = 'primaire' if student['classe'].upper() in ['MATERNELLE','CP','CE1','CE2','CM1','CM2'] else 'secondaire'
+                group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
                 data[group].append(student)
                 data['paiements'][student['id']] = []
+
             save_data(data)
             return redirect(url_for('students'))
+
     return render_template('import.html')
 
 @app.route('/delete/<student_id>', methods=['POST'])
@@ -127,3 +151,4 @@ def delete_student(student_id):
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
+        
