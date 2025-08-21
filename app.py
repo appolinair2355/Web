@@ -64,7 +64,7 @@ def students():
         grouped[cls] = [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls]
     return render_template('students.html', grouped=grouped)
 
-@app.route('/export')
+@app.route('/export_excel')
 def export_excel():
     data = load_data()
     all_students = data['primaire'] + data['secondaire']
@@ -92,7 +92,7 @@ def export_excel():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
 
-@app.route('/import', methods=['GET', 'POST'])
+@app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
     if request.method == 'POST':
         file = request.files['file']
@@ -124,11 +124,10 @@ def import_excel():
                 group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
                 data[group].append(student)
                 data['paiements'][student['id']] = []
-
             save_data(data)
             return redirect(url_for('students'))
 
-    return render_template('import.html')
+    return render_template('import_excel.html')
 
 @app.route('/delete/<student_id>', methods=['POST'])
 def delete_student(student_id):
@@ -151,4 +150,4 @@ def delete_student(student_id):
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
-        
+              
