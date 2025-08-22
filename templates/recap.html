@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Récapitulatif – Mont Sion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
+        <h1>📊 Récapitulatif global</h1>
+        <a href="{{ url_for('index') }}">← Retour</a>
+    </nav>
+
+    <main class="container">
+        <h2>Tableau complet</h2>
+        <table class="fees-table">
+            <thead>
+                <tr>
+                    <th>Classe</th><th>Nom & Prénoms</th><th>Matières & Notes</th><th>Reste scolarité</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td>{{ s.classe }}</td>
+                    <td>{{ s.prenoms }} {{ s.nom }}</td>
+                    <td>
+                        {% for m, n in s.get('notes', {}).items() %}
+                        {{ m }}: {{ n }}<br>
+                        {% endfor %}
+                    </td>
+                    <td>{{ s.frais_scolarite }} FCFA</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('export_excel') }}" class="btn btn-success">📥 Export Global Excel</a>
+    </main>
+</body>
+</html>
