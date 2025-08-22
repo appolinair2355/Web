@@ -38,6 +38,26 @@
                 </table>
             {% endif %}
         {% endfor %}
+
+
+        <table class="fees-table">
+  <thead>
+    <tr><th>Nom</th><th>Prénoms</th><th>Classe</th><th>Date naissance</th><th>Parent</th><th>Frais</th></tr>
+  </thead>
+  <tbody>
+    {% for s in primaire + secondaire %}
+      <tr>
+        <td>{{ s.nom }}</td>
+        <td>{{ s.prenoms }}</td>
+        <td>{{ s.classe }}</td>
+        <td>{{ s.date_naissance }}</td>
+        <td>{{ s.parent_phone }}</td>
+        <td>{{ s.frais_scolarite }} FCFA</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+        </table>
+        
     </main>
 </body>
 </html>
