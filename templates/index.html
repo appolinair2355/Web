@@ -2,30 +2,39 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>École Mont Sion de Bapkerou</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Accueil – Mont Sion de Bapkerou</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+        body{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;}
+        .welcome h1{font-size:3.8rem;margin-bottom:.5rem;animation:pop 1.5s infinite alternate;}
+        .welcome p{font-size:1.6rem;margin-bottom:3rem;}
+        @keyframes pop{from{transform:scale(1)}to{transform:scale(1.05)}}
+        .btn-grid{display:flex;flex-direction:column;gap:1.5rem;width:70%;}
+        .btn-large{width:100%;padding:1.8rem;font-size:1.5rem;border:none;border-radius:40px;color:#fff;cursor:pointer;transition:.4s;box-shadow:0 10px 25px rgba(0,0,0,.25);}
+        .btn-1{background:linear-gradient(45deg,#FF6B6B,#FF8E53);}
+        .btn-2{background:linear-gradient(45deg,#43CEA2,#185A9D);}
+        .btn-3{background:linear-gradient(45deg,#F7971E,#FFD200);}
+        .btn-4{background:linear-gradient(45deg,#11998E,#38EF7D);}
+        .btn-5{background:linear-gradient(45deg,#8E2DE2,#4A00E0);}
+        .btn-6{background:linear-gradient(45deg,#FF416C,#FF4B2B);}
+        .btn-7{background:linear-gradient(45deg,#36D1DC,#5B86E5);}
+        .btn-large:hover{transform:translateY(-7px) scale(1.05);}
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
-        <h1>🏫 École Mont Sion de Bapkerou</h1>
-        <div>
-            <a href="{{ url_for('register') }}" class="btn btn-primary">📋 Inscription</a>
-            <a href="{{ url_for('students') }}" class="btn btn-info">📚 Élèves</a>
-            <a href="{{ url_for('export_excel') }}" class="btn btn-success">📥 Export</a>
-            <a href="{{ url_for('import_excel') }}" class="btn btn-warning">📤 Importer</a>
-        </div>
-    </nav>
+    <div class="welcome">
+        <h1>🎓 Bienvenue à l'École Mont Sion de Bapkerou 🎓</h1>
+        <p>Primaire publique • Secondaire privé • Gestion moderne et émotionnelle</p>
+    </div>
 
-    <main class="container">
-        <div class="hero">
-            <h2>Bienvenue à l'École Mont Sion de Bapkerou</h2>
-            <p>Primaire publique • Secondaire privé • Gestion moderne des inscriptions et paiements</p>
-            <div class="cta-buttons">
-                <a href="{{ url_for('register') }}" class="btn-large btn-primary">📋 Inscrire un élève</a>
-                <a href="{{ url_for('students') }}" class="btn-large btn-info">📚 Voir les élèves</a>
-            </div>
-        </div>
-    </main>
+    <div class="btn-grid">
+        <a href="{{ url_for('register') }}" class="btn-large btn-1">📋 Inscription</a>
+        <a href="{{ url_for('students') }}" class="btn-large btn-2">📚 Liste des élèves par classe</a>
+        <a href="{{ url_for('edit_delete') }}" class="btn-large btn-3">✏️🗑️ Modifier / Supprimer</a>
+        <a href="{{ url_for('scolarite') }}" class="btn-large btn-4">💰 Scolarité</a>
+        <a href="{{ url_for('notes') }}" class="btn-large btn-5">📝 Notes</a>
+        <a href="{{ url_for('recap') }}" class="btn-large btn-6">📊 Récapitulatif</a>
+        <a href="{{ url_for('export_excel') }}" class="btn-large btn-7">📥 Export Global</a>
+    </div>
 </body>
 </html>
