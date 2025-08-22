@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Modifier / Supprimer – Mont Sion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
+        <h1>✏️🗑️ Modifier / Supprimer</h1>
+        <a href="{{ url_for('index') }}">← Retour</a>
+    </nav>
+
+    <main class="container">
+        <h2>Choisissez un élève</h2>
+        {% for s in primaire + secondaire %}
+        <div class="student-card">
+            <h3>{{ s.prenoms }} {{ s.nom }} ({{ s.classe }})</h3>
+            <a href="{{ url_for('edit_student', student_id=s.id) }}" class="btn-edit">✏️ Modifier</a>
+            <button onclick="openDeleteModal('{{ s.id }}')" class="btn-danger">🗑️ Supprimer</button>
+        </div>
+        {% endfor %}
+    </main>
+
+    <script>
+    let deleteStudentId = null;
+    function openDeleteModal(id){
+        deleteStudentId = id;
+        document.getElementById('deletePassword').value = '';
+        document.getElementById('deleteModal').style.display = 'block';
+    }
+    function closeDeleteModal(){document.getElementById('deleteModal').style.display='none';}
+    function confirmDelete(){
+        const pwd = prompt('Mot de passe pour supprimer :');
+        if(pwd !== 'arrow'){alert('Mot de passe incorrect');return;}
+        fetch(`/delete/${deleteStudentId}`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({password:pwd})
+        }).then(r=>r.json()).then(d=>{
+            if(d.success){location.reload();}else{alert(d.message);}
+        });
+    }
+    </script>
+</body>
+</html>
