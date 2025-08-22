@@ -9,6 +9,7 @@ app = Flask(__name__)
 DATABASE_FILE = 'database.yaml'
 PORT = int(os.environ.get('PORT', 10000))
 
+# --- utilitaires ---
 def init_database():
     if not os.path.exists(DATABASE_FILE):
         save_data({'primaire': [], 'secondaire': [], 'paiements': {}})
@@ -21,6 +22,7 @@ def save_data(data):
     with open(DATABASE_FILE, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, allow_unicode=True)
 
+# --- routes principales ---
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -48,10 +50,10 @@ def register():
         group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
         data.setdefault(group, [])
         data[group].append(student)
-        data.setdefault('paiements', {})
-        data['paiements'][student['id']] = []
+        data.setdefault('notes', {})
         save_data(data)
-        return redirect(url_for('students', saved='ok'))
+        return redirect(url_for('index'))
+
     return render_template('register.html')
 
 @app.route('/students')
@@ -64,20 +66,64 @@ def students():
         grouped[cls] = [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls]
     return render_template('students.html', grouped=grouped)
 
+@app.route('/scolarite')
+def scolarite():
+    data = load_data()
+    return render_template('scolarite.html', students=data['primaire'] + data['secondaire'])
+
+@app.route('/notes', methods=['GET', 'POST'])
+def notes():
+    if request.method == 'POST':
+        prof = request.form['professeur']
+        matiere = request.form['matiere']
+        classe = request.form['classe']
+        data = load_data()
+        eleves = [s for s in data['primaire'] + data['secondaire'] if s['classe'] == classe]
+        return render_template('notes_list.html', prof=prof, matiere=matiere, classe=classe, eleves=eleves)
+    return render_template('notes_form.html')
+
+@app.route('/add_note', methods=['POST'])
+def add_note():
+    data = request.get_json()
+    student_id = data['student_id']
+    matiere = data['matiere']
+    note = float(data['note'])
+    data = load_data()
+    for s in data['primaire'] + data['secondaire']:
+        if s['id'] == student_id:
+            s.setdefault('notes', {})
+            s['notes'][matiere] = note
+            save_data(data)
+            return jsonify({'success': True})
+    return jsonify({'success': False})
+
+@app.route('/edit_note', methods=['POST'])
+def edit_note():
+    if request.json.get('password') != 'Kouamé':
+        return jsonify({'success': False, 'message': 'Mot de passe incorrect'})
+    student_id = request.json['student_id']
+    matiere = request.json['matiere']
+    note = float(request.json['note'])
+    data = load_data()
+    for s in data['primaire'] + data['secondaire']:
+        if s['id'] == student_id:
+            s['notes'][matiere] = note
+            save_data(data)
+            return jsonify({'success': True})
+    return jsonify({'success': False})
+
 @app.route('/export_excel')
 def export_excel():
     data = load_data()
     all_students = data['primaire'] + data['secondaire']
-
     buffer = BytesIO()
     wb = xlsxwriter.Workbook(buffer, {'in_memory': True})
     ws = wb.add_worksheet('Inscriptions')
-
-    headers = ['Nom', 'Prénoms', 'Classe', 'Date naissance', 'Parent', 'Frais', 'Maître', 'Professeur', 'Directrice']
+    headers = ['Nom', 'Prénoms', 'Classe', 'Date naissance', 'Parent', 'Frais', 'Maître', 'Professeur', 'Directrice', 'Notes']
     for col, h in enumerate(headers):
         ws.write(0, col, h)
-
     for row, s in enumerate(all_students, start=1):
+        notes = ', '.join([f"{m}:{n}" for m, n in s.get('notes', {}).items()])
         ws.write(row, 0, s['nom'])
         ws.write(row, 1, s['prenoms'])
         ws.write(row, 2, s['classe'])
@@ -87,7 +133,7 @@ def export_excel():
         ws.write(row, 6, s['utilisateur'].get('maitre', ''))
         ws.write(row, 7, s['utilisateur'].get('professeur', ''))
         ws.write(row, 8, s['utilisateur'].get('directrice', ''))
-
+        ws.write(row, 9, notes)
     wb.close()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
@@ -100,10 +146,8 @@ def import_excel():
             import xlrd2
             wb = xlrd2.open_workbook(file_contents=file.read())
             ws = wb.sheet_by_index(0)
-
-            data = {'primaire': [], 'secondaire': [], 'paiements': {}}
+            data = load_data()
             classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
-
             for row_idx in range(1, ws.nrows):
                 row = ws.row(row_idx)
                 student = {
@@ -122,11 +166,10 @@ def import_excel():
                     'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 }
                 group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
+                data.setdefault(group, [])
                 data[group].append(student)
-                data['paiements'][student['id']] = []
             save_data(data)
-            return redirect(url_for('students'))
-
+            return redirect(url_for('index'))
     return render_template('import_excel.html')
 
 @app.route('/delete/<student_id>', methods=['POST'])
@@ -142,7 +185,7 @@ def delete_student(student_id):
         if len(data[group]) < original:
             deleted = True
     if deleted:
-        data['paiements'].pop(student_id, None)
+        data['notes'].pop(student_id, None)
         save_data(data)
         return jsonify({'success': True})
     return jsonify({'success': False, 'message': 'Élève introuvable.'})
@@ -150,4 +193,4 @@ def delete_student(student_id):
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
-              
+                   
