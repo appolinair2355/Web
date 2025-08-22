@@ -1,46 +1,81 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <title>Modifier / Supprimer – Mont Sion</title>
+    <meta charset="UTF-8">
+    <title>Modifier / Supprimer – Mont Sion de Bapkerou</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
-        <h1>✏️🗑️ Modifier / Supprimer</h1>
+        <h1>✏️🗑️ Modifier / Supprimer – Mont Sion de Bapkerou</h1>
         <a href="{{ url_for('index') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        <h2>Choisissez un élève</h2>
-        {% for s in primaire + secondaire %}
-        <div class="student-card">
-            <h3>{{ s.prenoms }} {{ s.nom }} ({{ s.classe }})</h3>
-            <a href="{{ url_for('edit_student', student_id=s.id) }}" class="btn-edit">✏️ Modifier</a>
-            <button onclick="openDeleteModal('{{ s.id }}')" class="btn-danger">🗑️ Supprimer</button>
-        </div>
-        {% endfor %}
+        <h2>Liste des élèves</h2>
+        {% set data = load_data() %}
+        {% set students = data['primaire'] + data['secondaire'] %}
+
+        {% if students %}
+            {% for s in students %}
+            <div class="student-card">
+                <h3>{{ s.prenoms }} {{ s.nom }} ({{ s.classe }})</h3>
+                <a href="{{ url_for('edit_student', student_id=s.id) }}" class="btn-edit">✏️ Modifier</a>
+                <button onclick="deleteStudent('{{ s.id }}', '{{ s.prenoms }} {{ s.nom }}')" class="btn-danger">🗑️ Supprimer</button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Aucun élève inscrit.</p>
+        {% endif %}
     </main>
+
+    <!-- Modal suppression sécurisée -->
+    <div id="deleteModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span onclick="closeDeleteModal()" style="float:right;cursor:pointer;">&times;</span>
+            <h3>Supprimer l’élève <span id="delName"></span> ?</h3>
+            <label>Mot de passe : <input type="password" id="delPwd" placeholder="Mot de passe"></label><br>
+            <button onclick="confirmDelete()" class="btn btn-danger">Confirmer</button>
+            <button onclick="closeDeleteModal()" class="btn btn-secondary">Annuler</button>
+        </div>
+    </div>
 
     <script>
     let deleteStudentId = null;
-    function openDeleteModal(id){
+    let deleteStudentName = null;
+
+    function deleteStudent(id, name) {
         deleteStudentId = id;
-        document.getElementById('deletePassword').value = '';
+        deleteStudentName = name;
+        document.getElementById('delName').textContent = name;
+        document.getElementById('delPwd').value = '';
         document.getElementById('deleteModal').style.display = 'block';
     }
-    function closeDeleteModal(){document.getElementById('deleteModal').style.display='none';}
-    function confirmDelete(){
-        const pwd = prompt('Mot de passe pour supprimer :');
-        if(pwd !== 'arrow'){alert('Mot de passe incorrect');return;}
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    function confirmDelete() {
+        const pwd = document.getElementById('delPwd').value;
+        if (pwd !== 'arrow') {
+            alert('Mot de passe incorrect');
+            return;
+        }
         fetch(`/delete/${deleteStudentId}`, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({password:pwd})
-        }).then(r=>r.json()).then(d=>{
-            if(d.success){location.reload();}else{alert(d.message);}
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: pwd})
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
         });
     }
     </script>
 </body>
-</html>
+    </html>
+    
