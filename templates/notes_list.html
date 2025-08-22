@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter des notes – Mont Sion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
+        <h1>📝 Ajouter des notes</h1>
+        <a href="{{ url_for('index') }}">← Retour</a>
+    </nav>
+
+    <main class="container">
+        <form method="POST" class="registration-form">
+            <div class="form-group"><label>Professeur / Maître :</label><input name="professeur" required></div>
+            <div class="form-group"><label>Matière :</label><input name="matiere" required></div>
+            <div class="form-group">
+                <label>Classe :</label>
+                <select name="classe" required>
+                    <option value="">-- Choisissez --</option>
+                    <optgroup label="Primaire">
+                        <option>MATERNELLE</option><option>CP</option><option>CE1</option><option>CE2</option><option>CM1</option><option>CM2</option>
+                    </optgroup>
+                    <optgroup label="Secondaire">
+                        <option>6ème</option><option>5ème</option><option>4ème</option><option>3ème</option>
+                    </optgroup>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Voir la liste</button>
+        </form>
+    </main>
+</body>
+                                 </html>
+                                 
