@@ -2,132 +2,79 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Gestion des Scolarités - Mont Sion de Bapkerou</title>
+    <title>Scolarité – Mont Sion</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <h1>💰 Gestion des Scolarités - Mont Sion de Bapkerou</h1>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
+        <h1>💰 Scolarité – Mont Sion de Bapkerou</h1>
         <a href="{{ url_for('index') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        <h2>📊 Tableau des paiements</h2>
+        {% set data = load_data() %}
+        {% set students = data['primaire'] + data['secondaire'] %}
+        <table class="fees-table">
+            <thead>
+                <tr>
+                    <th>Nom & Prénoms</th>
+                    <th>Classe</th>
+                    <th>Total</th>
+                    <th>Reste</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td>{{ s.prenoms }} {{ s.nom }}</td>
+                    <td>{{ s.classe }}</td>
+                    <td>{{ s.frais_scolarite }} FCFA</td>
+                    <td>{{ s.frais_scolarite }} FCFA</td>
+                    <td>
+                        <button onclick="openPayModal('{{ s.id }}', '{{ s.prenoms }} {{ s.nom }}')" class="btn-pay">💸 Payer</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-        <section>
-            <h3>🎒 Primaire (Public)</h3>
-            <table class="fees-table">
-                <thead>
-                    <tr>
-                        <th>Nom & Prénoms</th>
-                        <th>Classe</th>
-                        <th>Total</th>
-                        <th>Payé</th>
-                        <th>Reste</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in primaire %}
-                    <tr id="row-{{ student.id }}">
-                        <td>{{ student.prenoms }} {{ student.nom }}</td>
-                        <td>{{ student.classe }}</td>
-                        <td>{{ student.frais_scolarite.total }} FCFA</td>
-                        <td class="paye">{{ student.frais_scolarite.paye }} FCFA</td>
-                        <td class="reste">{{ student.frais_scolarite.reste }} FCFA</td>
-                        <td><button onclick="openPayModal('{{ student.id }}', '{{ student.prenoms }} {{ student.nom }}')" class="btn-pay-small">💸 Payer</button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-
-        <section>
-            <h3>🏫 Secondaire (Privé)</h3>
-            <table class="fees-table">
-                <thead>
-                    <tr>
-                        <th>Nom & Prénoms</th>
-                        <th>Classe</th>
-                        <th>Total</th>
-                        <th>Payé</th>
-                        <th>Reste</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in secondaire %}
-                    <tr id="row-{{ student.id }}">
-                        <td>{{ student.prenoms }} {{ student.nom }}</td>
-                        <td>{{ student.classe }}</td>
-                        <td>{{ student.frais_scolarite.total }} FCFA</td>
-                        <td class="paye">{{ student.frais_scolarite.paye }} FCFA</td>
-                        <td class="reste">{{ student.frais_scolarite.reste }} FCFA</td>
-                        <td><button onclick="openPayModal('{{ student.id }}', '{{ student.prenoms }} {{ student.nom }}')" class="btn-pay-small">💸 Payer</button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    </main>
-
-    <!-- Modal -->
-    <div id="payModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span onclick="closeModal()" style="float:right; cursor:pointer;">&times;</span>
-            <h3>Paiement pour <span id="modalStudentName"></span></h3>
-            <form id="payForm">
-                <label>Montant à payer (FCFA) :</label>
-                <input type="number" id="payAmount" min="1000" step="1000" required>
-                <button type="submit" class="btn btn-primary">Confirmer</button>
-            </form>
+        <!-- Modal paiement sécurisé -->
+        <div id="payModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span onclick="closePayModal()" style="float:right;cursor:pointer;">&times;</span>
+                <h3>Payer pour <span id="modalName"></span></h3>
+                <label>Mot de passe : <input type="password" id="payPwd" placeholder="Mot de passe"></label><br>
+                <label>Montant : <input type="number" id="payAmount" min="1000" step="1000"></label><br>
+                <button onclick="confirmPay()" class="btn btn-primary">Valider</button>
+                <button onclick="closePayModal()" class="btn btn-secondary">Annuler</button>
+            </div>
         </div>
-    </div>
 
-    <script>
-    let currentStudentId = null;
-
-    function openPayModal(id, name) {
-        currentStudentId = id;
-        document.getElementById('modalStudentName').textContent = name;
-        document.getElementById('payModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('payModal').style.display = 'none';
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('payForm');
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const amount = parseFloat(document.getElementById('payAmount').value);
-                if (!amount || amount <= 0) {
-                    alert("Veuillez entrer un montant valide.");
-                    return;
-                }
-
-                fetch(`/api/payer/${currentStudentId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ montant: amount })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const row = document.getElementById(`row-${currentStudentId}`);
-                        row.querySelector('.paye').textContent = data.paye + ' FCFA';
-                        row.querySelector('.reste').textContent = data.reste + ' FCFA';
-                        closeModal();
-                    } else {
-                        alert("Erreur : " + data.error);
-                    }
-                });
+        <script>
+        let payStudentId = null;
+        function openPayModal(id, name){
+            payStudentId = id;
+            document.getElementById('modalName').textContent = name;
+            document.getElementById('payPwd').value = '';
+            document.getElementById('payAmount').value = '';
+            document.getElementById('payModal').style.display = 'block';
+        }
+        function closePayModal(){document.getElementById('payModal').style.display='none';}
+        function confirmPay(){
+            const pwd = document.getElementById('payPwd').value;
+            const amt = parseFloat(document.getElementById('payAmount').value);
+            if(pwd !== 'kouame' || amt <= 0){alert('Mot de passe ou montant invalide');return;}
+            fetch(`/pay/${payStudentId}`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({password:pwd,amount:amt})
+            }).then(r=>r.json()).then(d=>{
+                if(d.success){location.reload();}else{alert(d.message);}
             });
         }
-    });
-    </script>
+        </script>
+    </main>
 </body>
-                            </html>
-                
+</html>
