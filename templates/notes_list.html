@@ -1,36 +1,63 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Ajouter des notes – Mont Sion</title>
+    <title>Notes – {{ classe }} – {{ matiere }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
-        <h1>📝 Ajouter des notes</h1>
-        <a href="{{ url_for('index') }}">← Retour</a>
+        <h1>📝 {{ matiere }} – {{ classe }} – {{ prof }}</h1>
+        <a href="{{ url_for('notes') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        <form method="POST" class="registration-form">
-            <div class="form-group"><label>Professeur / Maître :</label><input name="professeur" required></div>
-            <div class="form-group"><label>Matière :</label><input name="matiere" required></div>
-            <div class="form-group">
-                <label>Classe :</label>
-                <select name="classe" required>
-                    <option value="">-- Choisissez --</option>
-                    <optgroup label="Primaire">
-                        <option>MATERNELLE</option><option>CP</option><option>CE1</option><option>CE2</option><option>CM1</option><option>CM2</option>
-                    </optgroup>
-                    <optgroup label="Secondaire">
-                        <option>6ème</option><option>5ème</option><option>4ème</option><option>3ème</option>
-                    </optgroup>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Voir la liste</button>
-        </form>
+        <h2>Liste des élèves</h2>
+        <table class="fees-table">
+            <thead><tr><th>Nom & Prénoms</th><th>Note</th><th>Action</th></tr></thead>
+            <tbody>
+                {% for s in eleves %}
+                <tr>
+                    <td>{{ s.prenoms }} {{ s.nom }}</td>
+                    <td>
+                        <input type="number" min="0" max="20" step="0.5" 
+                               id="note-{{ s.id }}" value="{{ s.notes.get(matiere, '') }}" 
+                               {% if matiere in s.notes %}readonly{% endif %}>
+                    </td>
+                    <td>
+                        {% if matiere not in s.notes %}
+                        <button onclick="addNote('{{ s.id }}', '{{ matiere }}')">Ajouter</button>
+                        {% else %}
+                        <button onclick="editNote('{{ s.id }}', '{{ matiere }}')">✏️</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </main>
+
+    <script>
+    function addNote(id, matiere){
+        const note = parseFloat(document.getElementById('note-'+id).value);
+        if(isNaN(note)){alert('Note invalide');return;}
+        fetch('/add_note', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({student_id:id,matiere:matiere,note:note})
+        }).then(r=>r.json()).then(d=>{if(d.success)location.reload();});
+    }
+    function editNote(id, matiere){
+        const pwd = prompt('Mot de passe pour modifier :');
+        if(pwd !== 'Kouamé'){alert('Mot de passe incorrect');return;}
+        const note = parseFloat(prompt('Nouvelle note :'));
+        if(isNaN(note)){alert('Note invalide');return;}
+        fetch('/edit_note', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({student_id:id,matiere:matiere,note:note,password:pwd})
+        }).then(r=>r.json()).then(d=>{if(d.success)location.reload();});
+    }
+    </script>
 </body>
-                                 </html>
-                                 
+</html>
