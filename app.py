@@ -147,7 +147,13 @@ def edit_note():
             return jsonify({'success': True})
     return jsonify({'success': False})
 
-# --- 7. EXPORT GLOBAL ---
+# --- 7. RECAPITULATIF ---
+@app.route('/recap')
+def recap():
+    data = load_data()
+    return render_template('recap.html', students=data['primaire'] + data['secondaire'])
+
+# --- 8. EXPORT / IMPORT EXCEL ---
 @app.route('/export_excel')
 def export_excel():
     data = load_data()
@@ -155,7 +161,7 @@ def export_excel():
     buffer = BytesIO()
     wb = xlsxwriter.Workbook(buffer, {'in_memory': True})
     ws = wb.add_worksheet('Global')
-    headers = ['Nom', 'Prénoms', 'Classe', 'Frais', 'Matières_Notes', 'Professeur']
+    headers = ['Nom', 'Prénoms', 'Classe', 'Frais', 'Matières_Notes', 'Professeur', 'Directrice']
     for col, h in enumerate(headers):
         ws.write(0, col, h)
     row = 1
@@ -167,12 +173,12 @@ def export_excel():
         ws.write(row, 3, s['frais_scolarite'])
         ws.write(row, 4, notes)
         ws.write(row, 5, s['utilisateur'].get('professeur', ''))
+        ws.write(row, 6, s['utilisateur'].get('directrice', ''))
         row += 1
     wb.close()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
 
-# --- 8. IMPORT EXCEL ---
 @app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
     if request.method == 'POST':
@@ -210,4 +216,3 @@ def import_excel():
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
-              
