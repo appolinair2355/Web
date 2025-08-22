@@ -8,23 +8,35 @@
 <body>
     <nav class="navbar">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
-        <h1>📚 Élèves par classe</h1>
+        <h1>📚 Élèves par classe – Mont Sion de Bapkerou</h1>
         <a href="{{ url_for('index') }}">← Retour</a>
     </nav>
 
     <main class="container">
-        {% for classe, students in grouped.items() %}
-        {% if students %}
-        <h2>{{ classe }}</h2>
-        <table class="fees-table">
-            <thead><tr><th>Nom</th><th>Prénoms</th><th>Date naissance</th><th>Parent</th><th>Frais</th></tr></thead>
-            <tbody>
-                {% for s in students %}
-                <tr><td>{{ s.nom }} {{ s.prenoms }}</td><td>{{ s.date_naissance }}</td><td>{{ s.parent_phone }}</td><td>{{ s.frais_scolarite }} FCFA</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
+        {% set data = load_data() %}
+        {% set all = data['primaire'] + data['secondaire'] %}
+        {% set classes = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème'] %}
+        {% for cls in classes %}
+            {% set eleves = [s for s in all if s['classe'] == cls] %}
+            {% if eleves %}
+                <h2>{{ cls }}</h2>
+                <table class="fees-table">
+                    <thead>
+                        <tr><th>Nom</th><th>Prénoms</th><th>Date naissance</th><th>Parent</th><th>Frais</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for s in eleves %}
+                            <tr>
+                                <td>{{ s.nom }}</td>
+                                <td>{{ s.prenoms }}</td>
+                                <td>{{ s.date_naissance }}</td>
+                                <td>{{ s.parent_phone }}</td>
+                                <td>{{ s.frais_scolarite }} FCFA</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
         {% endfor %}
     </main>
 </body>
