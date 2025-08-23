@@ -9,30 +9,29 @@ app = Flask(__name__)
 DATABASE_FILE = 'database.yaml'
 PORT = int(os.environ.get('PORT', 10000))
 
-# --- utilitaires ---
+# --------- UTILITAIRES ---------
 def init_database():
     if not os.path.exists(DATABASE_FILE):
-        save_data({'primaire': [], 'secondaire': [], 'paiements': {}, 'notes': {}})
+        save_data({'primaire': [], 'secondaire': [], 'notes': {}})
 
 def load_data():
-    with open(DATABASE_FILE, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
+    with open(DATABASE_FILE, 'r', encoding='utf-8') as file:
+        return yaml.safe_load(file)
 
 def save_data(data):
-    with open(DATABASE_FILE, 'w', encoding='utf-8') as f:
-        yaml.dump(data, f, allow_unicode=True)
+    with open(DATABASE_FILE, 'w', encoding='utf-8') as file:
+        yaml.dump(data, file, allow_unicode=True)
 
-# --- 1. ACCUEIL ---
+# --------- ROUTES ---------
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# --- 2. INSCRIPTION ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
     if request.method == 'POST':
         data = load_data()
+        classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
         student = {
             'id': str(uuid.uuid4()),
             'nom': request.form['nom'].upper(),
@@ -45,67 +44,27 @@ def register():
                 'maitre': request.form.get('maitre', ''),
                 'professeur': request.form.get('professeur', ''),
                 'directrice': request.form.get('directrice', '')
-            },
-            'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
         }
-        group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
+        group = 'primaire' if student['classe'] in classes_primaire else 'secondaire'
         data.setdefault(group, [])
         data[group].append(student)
         save_data(data)
-        return redirect(url_for('index'))
+        return redirect(url_for('students'))
     return render_template('register.html')
 
-# --- 3. LISTE PAR CLASSE ---
 @app.route('/students')
 def students():
     data = load_data()
-    classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
-    classes_secondaire = ['6ème', '5ème', '4ème', '3ème']
-    grouped = {}
-    for cls in classes_primaire + classes_secondaire:
-        grouped[cls] = [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls]
+    classes = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2', '6ème', '5ème', '4ème', '3ème']
+    grouped = {cls: [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls] for cls in classes}
     return render_template('students.html', grouped=grouped)
 
-# --- 4. MODIFIER / SUPPRIMER ---
-@app.route('/edit_delete')
-def edit_delete():
-    data = load_data()
-    return render_template('edit_delete.html', students=data['primaire'] + data['secondaire'])
-
-@app.route('/delete/<student_id>', methods=['POST'])
-def delete_student(student_id):
-    password = request.json.get('password')
-    if password != 'arrow':
-        return jsonify({'success': False, 'message': 'Mot de passe incorrect'})
-    data = load_data()
-    for group in ['primaire', 'secondaire']:
-        data[group] = [s for s in data[group] if s['id'] != student_id]
-    save_data(data)
-    return jsonify({'success': True})
-
-# --- 5. SCOLARITÉ / PAIEMENT ---
 @app.route('/scolarite')
 def scolarite():
     data = load_data()
     return render_template('scolarite.html', students=data['primaire'] + data['secondaire'])
 
-@app.route('/pay/<student_id>', methods=['POST'])
-def pay(student_id):
-    data = request.get_json()
-    if data.get('password') != 'kouame':
-        return jsonify({'success': False, 'message': 'Mot de passe incorrect'})
-    amount = float(data.get('amount', 0))
-    if amount <= 0:
-        return jsonify({'success': False, 'message': 'Montant invalide'})
-    data = load_data()
-    for s in data['primaire'] + data['secondaire']:
-        if s['id'] == student_id:
-            s['frais_scolarite'] = max(0, s['frais_scolarite'] - amount)
-            save_data(data)
-            return jsonify({'success': True})
-    return jsonify({'success': False, 'message': 'Élève introuvable'})
-
-# --- 6. NOTES ---
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
     if request.method == 'POST':
@@ -114,7 +73,7 @@ def notes():
         classe = request.form['classe']
         data = load_data()
         eleves = [s for s in data['primaire'] + data['secondaire'] if s['classe'] == classe]
-        return render_template('notes_list.html', prof=prof, matiere=matiere, classe=classe, eleves=eleves)
+        return render_template('notes_list.html', eleves=eleves, matiere=matiere, prof=prof)
     return render_template('notes_form.html')
 
 @app.route('/add_note', methods=['POST'])
@@ -124,10 +83,10 @@ def add_note():
     matiere = data['matiere']
     note = float(data['note'])
     data = load_data()
-    for s in data['primaire'] + data['secondaire']:
-        if s['id'] == student_id:
-            s.setdefault('notes', {})
-            s['notes'][matiere] = note
+    for student in data['primaire'] + data['secondaire']:
+        if student['id'] == student_id:
+            student.setdefault('notes', {})
+            student['notes'][matiere] = note
             save_data(data)
             return jsonify({'success': True})
     return jsonify({'success': False})
@@ -140,41 +99,49 @@ def edit_note():
     matiere = request.json['matiere']
     note = float(request.json['note'])
     data = load_data()
-    for s in data['primaire'] + data['secondaire']:
-        if s['id'] == student_id:
-            s['notes'][matiere] = note
+    for student in data['primaire'] + data['secondaire']:
+        if student['id'] == student_id:
+            student['notes'][matiere] = note
             save_data(data)
             return jsonify({'success': True})
     return jsonify({'success': False})
 
-# --- 7. RECAPITULATIF ---
-@app.route('/recap')
-def recap():
+@app.route('/edit_delete')
+def edit_delete():
     data = load_data()
-    return render_template('recap.html', students=data['primaire'] + data['secondaire'])
+    return render_template('edit_delete.html', students=data['primaire'] + data['secondaire'])
 
-# --- 8. EXPORT / IMPORT EXCEL ---
+@app.route('/delete/<student_id>', methods=['POST'])
+def delete_student(student_id):
+    pwd = request.json.get('password')
+    if pwd != 'arrow':
+        return jsonify({'success': False, 'message': 'Mot de passe incorrect'})
+    data = load_data()
+    for group in ['primaire', 'secondaire']:
+        data[group] = [s for s in data[group] if s['id'] != student_id]
+    save_data(data)
+    return jsonify({'success': True})
+
 @app.route('/export_excel')
 def export_excel():
     data = load_data()
-    all_students = data['primaire'] + data['secondaire']
     buffer = BytesIO()
     wb = xlsxwriter.Workbook(buffer, {'in_memory': True})
-    ws = wb.add_worksheet('Global')
-    headers = ['Nom', 'Prénoms', 'Classe', 'Frais', 'Matières_Notes', 'Professeur', 'Directrice']
-    for col, h in enumerate(headers):
-        ws.write(0, col, h)
-    row = 1
-    for s in all_students:
+    ws = wb.add_worksheet('Inscriptions')
+    headers = ['Nom', 'Prénoms', 'Classe', 'Date naissance', 'Parent', 'Frais', 'Maître', 'Professeur', 'Directrice', 'Notes']
+    for col, h in enumerate(headers): ws.write(0, col, h)
+    for row, s in enumerate(data['primaire'] + data['secondaire'], start=1):
         notes = ', '.join([f"{m}:{n}" for m, n in s.get('notes', {}).items()])
         ws.write(row, 0, s['nom'])
         ws.write(row, 1, s['prenoms'])
         ws.write(row, 2, s['classe'])
-        ws.write(row, 3, s['frais_scolarite'])
-        ws.write(row, 4, notes)
-        ws.write(row, 5, s['utilisateur'].get('professeur', ''))
-        ws.write(row, 6, s['utilisateur'].get('directrice', ''))
-        row += 1
+        ws.write(row, 3, s['date_naissance'])
+        ws.write(row, 4, s['parent_phone'])
+        ws.write(row, 5, s['frais_scolarite'])
+        ws.write(row, 6, s['utilisateur'].get('maitre', ''))
+        ws.write(row, 7, s['utilisateur'].get('professeur', ''))
+        ws.write(row, 8, s['utilisateur'].get('directrice', ''))
+        ws.write(row, 9, notes)
     wb.close()
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
@@ -203,14 +170,13 @@ def import_excel():
                         'maitre': str(row[6].value) if len(row) > 6 else '',
                         'professeur': str(row[7].value) if len(row) > 7 else '',
                         'directrice': str(row[8].value) if len(row) > 8 else ''
-                    },
-                    'date_inscription': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    }
                 }
-                group = 'primaire' if student['classe'].upper() in classes_primaire else 'secondaire'
+                group = 'primaire' if student['classe'] in classes_primaire else 'secondaire'
                 data.setdefault(group, [])
                 data[group].append(student)
             save_data(data)
-            return redirect(url_for('index'))
+            return redirect(url_for('students'))
     return render_template('import_excel.html')
 
 if __name__ == '__main__':
