@@ -27,6 +27,7 @@ def save_data(data):
 def index():
     return render_template('index.html')
 
+# -------- INSCRIPTION --------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
@@ -51,8 +52,10 @@ def register():
         data[group].append(student)
         save_data(data)
         return redirect(url_for('students'))
+
     return render_template('register.html')
 
+# -------- LISTE PAR CLASSE --------
 @app.route('/students')
 def students():
     data = load_data()
@@ -60,11 +63,13 @@ def students():
     grouped = {cls: [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls] for cls in classes}
     return render_template('students.html', grouped=grouped)
 
+# -------- SCOLARITÉ --------
 @app.route('/scolarite')
 def scolarite():
     data = load_data()
     return render_template('scolarite.html', students=data['primaire'] + data['secondaire'])
 
+# -------- NOTES --------
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
     if request.method == 'POST':
@@ -106,6 +111,7 @@ def edit_note():
             return jsonify({'success': True})
     return jsonify({'success': False})
 
+# -------- MODIFIER / SUPPRIMER --------
 @app.route('/edit_delete')
 def edit_delete():
     data = load_data()
@@ -122,6 +128,7 @@ def delete_student(student_id):
     save_data(data)
     return jsonify({'success': True})
 
+# -------- EXPORT GLOBAL --------
 @app.route('/export_excel')
 def export_excel():
     data = load_data()
@@ -147,6 +154,7 @@ def export_excel():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
 
+# -------- IMPORT EXCEL --------
 @app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
     if request.method == 'POST':
@@ -183,4 +191,3 @@ def import_excel():
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
-    
