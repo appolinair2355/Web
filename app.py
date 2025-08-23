@@ -9,7 +9,7 @@ app = Flask(__name__)
 DATABASE_FILE = 'database.yaml'
 PORT = int(os.environ.get('PORT', 10000))
 
-# --------- UTILITAIRES ---------
+# ------------ UTILITAIRES ------------
 def init_database():
     if not os.path.exists(DATABASE_FILE):
         save_data({'primaire': [], 'secondaire': [], 'notes': {}})
@@ -22,12 +22,12 @@ def save_data(data):
     with open(DATABASE_FILE, 'w', encoding='utf-8') as file:
         yaml.dump(data, file, allow_unicode=True)
 
-# --------- ROUTES ---------
+# ------------ ROUTES ------------
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# -------- INSCRIPTION --------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
@@ -55,7 +55,6 @@ def register():
 
     return render_template('register.html')
 
-# -------- LISTE PAR CLASSE --------
 @app.route('/students')
 def students():
     data = load_data()
@@ -63,13 +62,11 @@ def students():
     grouped = {cls: [s for s in data['primaire'] + data['secondaire'] if s['classe'] == cls] for cls in classes}
     return render_template('students.html', grouped=grouped)
 
-# -------- SCOLARITÉ --------
 @app.route('/scolarite')
 def scolarite():
     data = load_data()
     return render_template('scolarite.html', students=data['primaire'] + data['secondaire'])
 
-# -------- NOTES --------
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
     if request.method == 'POST':
@@ -111,7 +108,6 @@ def edit_note():
             return jsonify({'success': True})
     return jsonify({'success': False})
 
-# -------- MODIFIER / SUPPRIMER --------
 @app.route('/edit_delete')
 def edit_delete():
     data = load_data()
@@ -128,7 +124,6 @@ def delete_student(student_id):
     save_data(data)
     return jsonify({'success': True})
 
-# -------- EXPORT GLOBAL --------
 @app.route('/export_excel')
 def export_excel():
     data = load_data()
@@ -154,7 +149,6 @@ def export_excel():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='inscriptions.xlsx')
 
-# -------- IMPORT EXCEL --------
 @app.route('/import_excel', methods=['GET', 'POST'])
 def import_excel():
     if request.method == 'POST':
