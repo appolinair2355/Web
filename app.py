@@ -29,9 +29,9 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
     if request.method == 'POST':
         data = load_data()
-        classes_primaire = ['MATERNELLE', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
         student = {
             'id': str(uuid.uuid4()),
             'nom': request.form['nom'].upper(),
@@ -129,7 +129,8 @@ def export_excel():
     wb = xlsxwriter.Workbook(buffer, {'in_memory': True})
     ws = wb.add_worksheet('Inscriptions')
     headers = ['Nom', 'Prénoms', 'Classe', 'Date naissance', 'Parent', 'Frais', 'Maître', 'Professeur', 'Directrice', 'Notes']
-    for col, h in enumerate(headers): ws.write(0, col, h)
+    for col, h in enumerate(headers):
+        ws.write(0, col, h)
     for row, s in enumerate(data['primaire'] + data['secondaire'], start=1):
         notes = ', '.join([f"{m}:{n}" for m, n in s.get('notes', {}).items()])
         ws.write(row, 0, s['nom'])
@@ -182,3 +183,4 @@ def import_excel():
 if __name__ == '__main__':
     init_database()
     app.run(host='0.0.0.0', port=PORT, debug=True)
+    
