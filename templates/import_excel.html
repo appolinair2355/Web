@@ -1,23 +1,13 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Importer – Mont Sion</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
-        <h1>📤 Importer des inscriptions</h1>
-        <a href="{{ url_for('index') }}">← Retour</a>
-    </nav>
+{% extends "base.html" %}
+{% block content %}
+  <h2>Importer / Exporter les données</h2>
 
-    <main class="container">
-        <form method="POST" enctype="multipart/form-data" class="registration-form">
-            <h2>Choisir un fichier Excel (.xlsx)</h2>
-            <input type="file" name="file" accept=".xlsx" required>
-            <button type="submit" class="btn btn-primary">Importer</button>
-        </form>
-    </main>
-</body>
-</html>
+  <h3>Exporter vers Excel</h3>
+  <a class="btn-large" href="{{ url_for('export_xlsx') }}">Télécharger export_montsion.xlsx</a>
+
+  <h3 style="margin-top:40px;">Importer un fichier Excel</h3>
+  <form method="post" enctype="multipart/form-data" action="#">
+    <input type="file" name="file" accept=".xlsx,.xls" required>
+    <button class="btn-large">Importer</button>
+  </form>
+{% endblock %}
