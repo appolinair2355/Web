@@ -41,7 +41,7 @@ def inscription():
             "classe": request.form["classe"],
             "date_naissance": request.form["date_naissance"],
             "contact": request.form["contact"],
-            "scolarite": request.form["scolarite"],
+            "prix_scolarite": int(request.form["prix_scolarite"]),
             "enregistre_par": request.form["enregistre_par"],
             "created_at": datetime.now().isoformat(timespec="seconds"),
             "paiements": []
@@ -75,23 +75,21 @@ def note():
 def import_export():
     return render_template("import_export.html")
 
-# ---------- export ----------
 @app.route("/export")
 def export_xlsx():
     data = load_yaml()
     ds = Dataset(headers=["Nom", "Prénoms", "Classe", "Date naissance",
-                          "Contact", "Scolarité", "Enregistré par", "Date création"])
+                          "Téléphone tuteur", "Prix scolarité (FCFA)",
+                          "Enregistré par", "Date création"])
     for e in data["eleves"]:
         ds.append([e["nom"], e["prenoms"], e["classe"], e["date_naissance"],
-                   e["contact"], e["scolarite"], e["enregistre_par"], e["created_at"]])
+                   e["contact"], e["prix_scolarite"], e["enregistre_par"], e["created_at"]])
     blob = ds.export("xlsx")
     return send_file(io.BytesIO(blob),
                      download_name="export_montsion.xlsx",
                      as_attachment=True)
 
-# ---------- run ----------
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-        
