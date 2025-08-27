@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Inscrire un élève</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <p class="flash {{ cat }}">{{ msg }}</p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+    <label>Nom</label>
+    <input type="text" name="nom" required>
+
+    <label>Prénoms</label>
+    <input type="text" name="prenoms" required>
+
+    <label>Classe</label>
+    <select name="classe" required>
+      <optgroup label="Groupe 1 : 6e → 3e">
+        <option value="6e">6e</option>
+        <option value="5e">5e</option>
+        <option value="4e">4e</option>
+        <option value="3e">3e</option>
+      </optgroup>
+
+      <optgroup label="Groupe 2 : Maternelle → CM2">
+        <option value="PS">PS</option>
+        <option value="MS">MS</option>
+        <option value="GS">GS</option>
+        <option value="CP">CP</option>
+        <option value="CE1">CE1</option>
+        <option value="CE2">CE2</option>
+        <option value="CM1">CM1</option>
+        <option value="CM2">CM2</option>
+      </optgroup>
+    </select>
+
+    <label>Date de naissance</label>
+    <input type="date" name="date_naissance" required>
+
+    <label>Contact tuteur / parent</label>
+    <input type="text" name="contact" required>
+
+    <label>Scolarité (année)</label>
+    <input type="text" name="scolarite" required>
+
+    <label>Enregistré par</label>
+    <input type="text" name="enregistre_par" required>
+
+    <button type="submit" class="btn-large">Enregistrer l’inscription</button>
+  </form>
+{% endblock %}
