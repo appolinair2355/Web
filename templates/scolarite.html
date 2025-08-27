@@ -1,80 +1,37 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Scolarité – Mont Sion</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="40">
-        <h1>💰 Scolarité – Mont Sion de Bapkerou</h1>
-        <a href="{{ url_for('index') }}">← Retour</a>
-    </nav>
+{% extends "base.html" %}
+{% block content %}
+  <h2>Gestion de la scolarité</h2>
 
-    <main class="container">
-        {% set data = load_data() %}
-        {% set students = data['primaire'] + data['secondaire'] %}
-        <table class="fees-table">
-            <thead>
-                <tr>
-                    <th>Nom & Prénoms</th>
-                    <th>Classe</th>
-                    <th>Total</th>
-                    <th>Reste</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in students %}
-                <tr>
-                    <td>{{ s.prenoms }} {{ s.nom }}</td>
-                    <td>{{ s.classe }}</td>
-                    <td>{{ s.frais_scolarite }} FCFA</td>
-                    <td>{{ s.frais_scolarite }} FCFA</td>
-                    <td>
-                        <button onclick="openPayModal('{{ s.id }}', '{{ s.prenoms }} {{ s.nom }}')" class="btn-pay">💸 Payer</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  {% if request.method == "GET" %}
+    <form method="post">
+      <label>Mot de passe</label>
+      <input type="password" name="password" required>
+      <button class="btn-large">Valider</button>
+    </form>
+  {% endif %}
 
-        <!-- Modal paiement sécurisé -->
-        <div id="payModal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <span onclick="closePayModal()" style="float:right;cursor:pointer;">&times;</span>
-                <h3>Payer pour <span id="modalName"></span></h3>
-                <label>Mot de passe : <input type="password" id="payPwd" placeholder="Mot de passe"></label><br>
-                <label>Montant : <input type="number" id="payAmount" min="1000" step="1000"></label><br>
-                <button onclick="confirmPay()" class="btn btn-primary">Valider</button>
-                <button onclick="closePayModal()" class="btn btn-secondary">Annuler</button>
-            </div>
-        </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <p class="flash {{ cat }}">{{ msg }}</p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-        <script>
-        let payStudentId = null;
-        function openPayModal(id, name){
-            payStudentId = id;
-            document.getElementById('modalName').textContent = name;
-            document.getElementById('payPwd').value = '';
-            document.getElementById('payAmount').value = '';
-            document.getElementById('payModal').style.display = 'block';
-        }
-        function closePayModal(){document.getElementById('payModal').style.display='none';}
-        function confirmPay(){
-            const pwd = document.getElementById('payPwd').value;
-            const amt = parseFloat(document.getElementById('payAmount').value);
-            if(pwd !== 'kouame' || amt <= 0){alert('Mot de passe ou montant invalide');return;}
-            fetch(`/pay/${payStudentId}`, {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({password:pwd,amount:amt})
-            }).then(r=>r.json()).then(d=>{
-                if(d.success){location.reload();}else{alert(d.message);}
-            });
-        }
-        </script>
-    </main>
-</body>
-</html>
+  {% if eleves is defined %}
+    <p style="margin-top:30px;font-weight:bold;">Liste complète avec paiements</p>
+    <table>
+      <thead><tr>
+        <th>Nom</th><th>Prénoms</th><th>Classe</th><th>Paiements</th>
+      </tr></thead>
+      <tbody>
+        {% for e in eleves %}
+        <tr>
+          <td>{{ e.nom }}</td><td>{{ e.prenoms }}</td><td>{{ e.classe }}</td>
+          <td>{{ e.paiements|length }} enregistré(s)</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}
