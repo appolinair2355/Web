@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
 from ruamel.yaml import YAML
 from tablib import Dataset
 import os
@@ -64,8 +64,30 @@ def scolarite():
         if request.form.get("password") != "kouame":
             flash("Mot de passe incorrect.", "danger")
             return redirect(url_for("scolarite"))
+        session["auth_scolarite"] = True
+        return redirect(url_for("scolarite"))
+
+    if not session.get("auth_scolarite"):
+        return render_template("scolarite_login.html")
+
     data = load_yaml()
     return render_template("scolarite.html", eleves=data["eleves"])
+
+@app.route("/payer/<int:index>", methods=["POST"])
+def payer(index):
+    if not session.get("auth_scolarite"):
+        return redirect(url_for("scolarite"))
+
+    montant = int(request.form["montant"])
+    data = load_yaml()
+    if 0 <= index < len(data["eleves"]):
+        data["eleves"][index]["paiements"].append({
+            "date": datetime.now().isoformat(timespec="seconds"),
+            "montant": montant
+        })
+        save_yaml(data)
+        flash("Paiement enregistré.", "success")
+    return redirect(url_for("scolarite"))
 
 @app.route("/note")
 def note():
