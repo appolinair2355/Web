@@ -11,40 +11,24 @@
   {% endwith %}
 
   <form method="post">
-    <label>Nom</label>
-    <input type="text" name="nom" required>
-
-    <label>Prénoms</label>
-    <input type="text" name="prenoms" required>
+    <label>Nom</label><input type="text" name="nom" required>
+    <label>Prénoms</label><input type="text" name="prenoms" required>
 
     <label>Classe</label>
     <select name="classe" required>
-      <option value="Maternelle">Maternelle</option>
-      <option value="CI">CI</option>
-      <option value="CP">CP</option>
-      <option value="CE1">CE1</option>
-      <option value="CE2">CE2</option>
-      <option value="CM1">CM1</option>
-      <option value="CM2">CM2</option>
-      <option value="6e">6e</option>
-      <option value="5e">5e</option>
-      <option value="4e">4e</option>
-      <option value="3e">3e</option>
+      <option>Maternelle</option><option>CI</option><option>CP</option>
+      <option>CE1</option><option>CE2</option><option>CM1</option>
+      <option>CM2</option><option>6e</option><option>5e</option>
+      <option>4e</option><option>3e</option>
     </select>
 
-    <label>Date de naissance</label>
-    <input type="date" name="date_naissance" required>
-
+    <label>Date de naissance</label><input type="date" name="date_naissance" required>
     <label>Numéro de téléphone du tuteur / parent</label>
     <input type="tel" name="contact" placeholder="+229 XX XX XX XX" required>
-
     <label>Prix de la scolarité (FCFA Bénin)</label>
     <input type="number" name="prix_scolarite" min="0" step="100" placeholder="45000" required>
-
-    <label>Enregistré par</label>
-    <input type="text" name="enregistre_par" required>
-
+    <label>Enregistré par</label><input type="text" name="enregistre_par" required>
     <button type="submit" class="btn-large">Enregistrer l’inscription</button>
   </form>
+  <a class="btn-large" style="margin-top:20px;" href="{{ url_for('home') }}">Retour à l’accueil</a>
 {% endblock %}
-      
