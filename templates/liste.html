@@ -1,31 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
   <h2>Liste complète des apprenants</h2>
-
   <table>
     <thead>
       <tr>
-        <th>Nom</th>
-        <th>Prénoms</th>
-        <th>Classe</th>
-        <th>Date naissance</th>
-        <th>Téléphone tuteur</th>
-        <th>Prix scolarité (FCFA)</th>
-        <th>Enregistré par</th>
+        <th>Nom</th><th>Prénoms</th><th>Classe</th><th>Date naissance</th>
+        <th>Téléphone tuteur</th><th>Prix scolarité (FCFA)</th><th>Enregistré par</th>
       </tr>
     </thead>
     <tbody>
       {% for e in eleves %}
       <tr>
-        <td>{{ e.nom }}</td>
-        <td>{{ e.prenoms }}</td>
-        <td>{{ e.classe }}</td>
-        <td>{{ e.date_naissance }}</td>
-        <td>{{ e.contact }}</td>
+        <td>{{ e.nom }}</td><td>{{ e.prenoms }}</td><td>{{ e.classe }}</td>
+        <td>{{ e.date_naissance }}</td><td>{{ e.contact }}</td>
         <td>{{ "{:,}".format(e.prix_scolarite).replace(',', ' ') }} FCFA</td>
         <td>{{ e.enregistre_par }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  <a class="btn-large" style="margin-top:20px;" href="{{ url_for('home') }}">Retour à l’accueil</a>
 {% endblock %}
