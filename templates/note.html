@@ -7,22 +7,13 @@
   {% endwith %}
 
   <form method="post" action="{{ url_for('note') }}">
-    <label>Nom professeur :</label>
-    <input type="text" name="prof" required>
-
-    <label>Matière :</label>
-    <input type="text" name="matiere" required>
-
-    <label>Coefficient :</label>
-    <input type="number" name="coefficient" min="1" required>
-
+    <label>Nom professeur :</label><input type="text" name="prof" required>
+    <label>Matière :</label><input type="text" name="matiere" required>
+    <label>Coefficient :</label><input type="number" name="coefficient" min="1" required>
     <label>Classe :</label>
     <select name="classe" required>
-      {% for c in classes %}
-        <option value="{{ c }}">{{ c }}</option>
-      {% endfor %}
+      {% for c in classes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
     </select>
-
     <button type="submit" class="btn-large">Valider</button>
   </form>
 
