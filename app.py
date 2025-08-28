@@ -15,7 +15,6 @@ os.makedirs(DATA_DIR, exist_ok=True)
 yaml = YAML(typ='safe')
 yaml.default_flow_style = False
 
-# ---------- helpers ----------
 def load_yaml():
     if not os.path.exists(YAML_FILE):
         return {"eleves": []}
@@ -27,7 +26,6 @@ def save_yaml(data):
     with open(YAML_FILE, "w", encoding="utf-8") as f:
         yaml.dump(data, f)
 
-# ---------- routes ----------
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -89,6 +87,7 @@ def payer(index):
         flash("Paiement enregistré.", "success")
     return redirect(url_for("scolarite"))
 
+# ---------- NOTES ----------
 @app.route("/note", methods=["GET", "POST"])
 def note():
     data = load_yaml()
@@ -131,6 +130,7 @@ def save_note():
     flash("Notes enregistrées !", "success")
     return redirect(url_for("note"))
 
+# ---------- IMPORT / EXPORT ----------
 @app.route("/import_export")
 def import_export():
     return render_template("import_export.html")
@@ -138,9 +138,9 @@ def import_export():
 @app.route("/export")
 def export_xlsx():
     data = load_yaml()
-    ds = Dataset(headers=["Nom", "Prénoms", "Classe", "Date naissance",
-                          "Téléphone tuteur", "Prix scolarité (FCFA)",
-                          "Enregistré par", "Date création", "Paiements", "Notes"])
+    ds = Dataset(headers=["Nom","Prénoms","Classe","Date naissance",
+                          "Téléphone tuteur","Prix scolarité (FCFA)",
+                          "Enregistré par","Date création","Paiements","Notes"])
     for e in data["eleves"]:
         paiements = "; ".join([f"{p['montant']} FCFA le {p['date'][:10]}" for p in e.get("paiements", [])])
         notes = "; ".join([f"{k}({v['coefficient']}):{v['note']}" for k, v in e.get("notes", {}).items()])
@@ -160,18 +160,21 @@ def import_xlsx():
         return redirect(url_for("import_export"))
 
     try:
-        df = pd.read_excel(file)
+        # tablit lit le fichier sans pandas
+        imported = Dataset().load(file.read())
         data = load_yaml()
-        for _, row in df.iterrows():
+        for row in imported:
+            if len(row) < 10:
+                continue
             eleve = {
-                "nom": str(row.get("Nom", "")),
-                "prenoms": str(row.get("Prénoms", "")),
-                "classe": str(row.get("Classe", "")),
-                "date_naissance": str(row.get("Date naissance", "")),
-                "contact": str(row.get("Téléphone tuteur", "")),
-                "prix_scolarite": int(row.get("Prix scolarité (FCFA)", 0)),
-                "enregistre_par": str(row.get("Enregistré par", "")),
-                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "nom": str(row[0]),
+                "prenoms": str(row[1]),
+                "classe": str(row[2]),
+                "date_naissance": str(row[3]),
+                "contact": str(row[4]),
+                "prix_scolarite": int(row[5] or 0),
+                "enregistre_par": str(row[6]),
+                "created_at": str(row[7]),
                 "paiements": [],
                 "notes": {}
             }
@@ -186,4 +189,3 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-    
