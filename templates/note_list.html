@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{{ matiere }} (coef {{ coefficient }}) – {{ prof }} – {{ classe }}</h2>
+
+  <form method="post" action="{{ url_for('save_note') }}">
+    <input type="hidden" name="classe" value="{{ classe }}">
+    <input type="hidden" name="matiere" value="{{ matiere }}">
+    <input type="hidden" name="prof" value="{{ prof }}">
+    <input type="hidden" name="coefficient" value="{{ coefficient }}">
+
+    <table>
+      <thead>
+        <tr><th>Nom</th><th>Prénoms</th><th>Note / 20</th></tr>
+      </thead>
+      <tbody>
+        {% for e in eleves %}
+        <tr>
+          <td>{{ e.nom }}</td>
+          <td>{{ e.prenoms }}</td>
+          <td>
+            <input type="number" name="note_{{ loop.index0 }}" min="0" max="20" step="0.5" required>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="submit" class="btn-large">Enregistrer les notes</button>
+  </form>
+
+  <a class="btn-large" href="{{ url_for('note') }}">Retour</a>
+{% endblock %}
