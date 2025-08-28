@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Accès à la scolarité</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <p class="flash {{ cat }}">{{ msg }}</p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+    <label>Mot de passe :</label>
+    <input type="password" name="password" required>
+    <button type="submit" class="btn-large">Valider</button>
+  </form>
+
+  <a class="btn-large" style="margin-top:30px;" href="{{ url_for('home') }}">Retour à l’accueil</a>
+{% endblock %}
