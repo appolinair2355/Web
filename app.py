@@ -1,9 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
-from ruamel.yaml import YAML
-from tablib import Dataset
-import os
-import io
+import yaml, os, io
 from datetime import datetime
+import xlsxwriter
+import xlrd2
 
 app = Flask(__name__)
 app.secret_key = "kouame2025"
@@ -12,20 +11,19 @@ DATA_DIR = "data"
 YAML_FILE = os.path.join(DATA_DIR, "inscriptions.yaml")
 os.makedirs(DATA_DIR, exist_ok=True)
 
-yaml = YAML(typ='safe')
-yaml.default_flow_style = False
-
+# ---------- helpers ----------
 def load_yaml():
     if not os.path.exists(YAML_FILE):
         return {"eleves": []}
     with open(YAML_FILE, "r", encoding="utf-8") as f:
-        data = yaml.load(f)
+        data = yaml.safe_load(f)
         return data if data else {"eleves": []}
 
 def save_yaml(data):
     with open(YAML_FILE, "w", encoding="utf-8") as f:
-        yaml.dump(data, f)
+        yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
 
+# ---------- routes ----------
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -138,19 +136,30 @@ def import_export():
 @app.route("/export")
 def export_xlsx():
     data = load_yaml()
-    ds = Dataset(headers=["Nom","Prénoms","Classe","Date naissance",
-                          "Téléphone tuteur","Prix scolarité (FCFA)",
-                          "Enregistré par","Date création","Paiements","Notes"])
-    for e in data["eleves"]:
+    output = io.BytesIO()
+    wb = xlsxwriter.Workbook(output)
+    ws = wb.add_worksheet("Mont Sion")
+
+    headers = ["Nom", "Prénoms", "Classe", "Date naissance",
+               "Téléphone tuteur", "Prix scolarité (FCFA)",
+               "Enregistré par", "Date création", "Paiements", "Notes"]
+    for col, h in enumerate(headers):
+        ws.write(0, col, h)
+
+    for row, e in enumerate(data["eleves"], start=1):
         paiements = "; ".join([f"{p['montant']} FCFA le {p['date'][:10]}" for p in e.get("paiements", [])])
         notes = "; ".join([f"{k}({v['coefficient']}):{v['note']}" for k, v in e.get("notes", {}).items()])
-        ds.append([e["nom"], e["prenoms"], e["classe"], e["date_naissance"],
-                   e["contact"], e["prix_scolarite"], e["enregistre_par"],
-                   e["created_at"], paiements, notes])
-    blob = ds.export("xlsx")
-    return send_file(io.BytesIO(blob),
-                     download_name="montsion_complet.xlsx",
-                     as_attachment=True)
+        row_data = [
+            e["nom"], e["prenoms"], e["classe"], e["date_naissance"],
+            e["contact"], e["prix_scolarite"], e["enregistre_par"],
+            e["created_at"], paiements, notes
+        ]
+        for col, val in enumerate(row_data):
+            ws.write(row, col, val)
+
+    wb.close()
+    output.seek(0)
+    return send_file(output, download_name="montsion_complet.xlsx", as_attachment=True)
 
 @app.route("/import_xlsx", methods=["POST"])
 def import_xlsx():
@@ -160,12 +169,11 @@ def import_xlsx():
         return redirect(url_for("import_export"))
 
     try:
-        # tablit lit le fichier sans pandas
-        imported = Dataset().load(file.read())
+        wb = xlrd2.open_workbook(file_contents=file.read())
+        sheet = wb.sheet_by_index(0)
         data = load_yaml()
-        for row in imported:
-            if len(row) < 10:
-                continue
+        for r in range(1, sheet.nrows):
+            row = sheet.row_values(r)
             eleve = {
                 "nom": str(row[0]),
                 "prenoms": str(row[1]),
@@ -189,3 +197,4 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+            
