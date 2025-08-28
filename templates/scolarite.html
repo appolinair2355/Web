@@ -2,47 +2,41 @@
 {% block content %}
   <h2>Gestion de la scolarité</h2>
 
-  {% if request.method == "GET" %}
-    <form method="post">
-      <label>Mot de passe</label>
-      <input type="password" name="password" required>
-      <button class="btn-large">Valider</button>
-    </form>
-  {% endif %}
+  <div style="margin-bottom:20px;">
+    <a class="btn-large" href="{{ url_for('home') }}">Retour à l’accueil</a>
+  </div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for cat, msg in messages %}
-        <p class="flash {{ cat }}">{{ msg }}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prénoms</th>
+        <th>Classe</th>
+        <th>Prix scolarité (FCFA)</th>
+        <th>Total payé</th>
+        <th>Reste à payer</th>
+        <th>Payer</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in eleves %}
+      {% set total = e.paiements | map(attribute='montant') | sum %}
+      {% set reste = e.prix_scolarite - total %}
+      <tr>
+        <td>{{ e.nom }}</td>
+        <td>{{ e.prenoms }}</td>
+        <td>{{ e.classe }}</td>
+        <td>{{ "{:,}".format(e.prix_scolarite).replace(',', ' ') }} FCFA</td>
+        <td>{{ "{:,}".format(total).replace(',', ' ') }} FCFA</td>
+        <td>{{ "{:,}".format(reste).replace(',', ' ') }} FCFA</td>
+        <td>
+          <form action="{{ url_for('payer', index=loop.index0) }}" method="post" style="display:inline;">
+            <input type="number" name="montant" min="100" step="100" placeholder="1000" required>
+            <button type="submit" class="btn-small">Payer</button>
+          </form>
+        </td>
+      </tr>
       {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  {% if eleves is defined %}
-    <p style="margin-top:30px;font-weight:bold;">Liste complète avec prix de scolarité</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Prénoms</th>
-          <th>Classe</th>
-          <th>Téléphone tuteur</th>
-          <th>Prix scolarité (FCFA)</th>
-          <th>Paiements</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in eleves %}
-        <tr>
-          <td>{{ e.nom }}</td>
-          <td>{{ e.prenoms }}</td>
-          <td>{{ e.classe }}</td>
-          <td>{{ e.contact }}</td>
-          <td>{{ "{:,}".format(e.prix_scolarite).replace(',', ' ') }} FCFA</td>
-          <td>{{ e.paiements|length }} enregistré(s)</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
+    </tbody>
+  </table>
 {% endblock %}
