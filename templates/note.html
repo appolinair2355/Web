@@ -1,5 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Gestion des notes</h2>
-  <p>Fonctionnalité en cours de développement.</p>
+  <h2>Ajouter des notes</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<p class="flash {{ cat }}">{{ msg }}</p>{% endfor %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('note') }}">
+    <label>Nom professeur :</label>
+    <input type="text" name="prof" required>
+
+    <label>Matière :</label>
+    <input type="text" name="matiere" required>
+
+    <label>Coefficient :</label>
+    <input type="number" name="coefficient" min="1" required>
+
+    <label>Classe :</label>
+    <select name="classe" required>
+      {% for c in classes %}
+        <option value="{{ c }}">{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn-large">Valider</button>
+  </form>
+
+  <a class="btn-large" href="{{ url_for('home') }}">Retour à l’accueil</a>
 {% endblock %}
