@@ -19,15 +19,26 @@
   {% endwith %}
 
   {% if eleves is defined %}
-    <p style="margin-top:30px;font-weight:bold;">Liste complète avec paiements</p>
+    <p style="margin-top:30px;font-weight:bold;">Liste complète avec prix de scolarité</p>
     <table>
-      <thead><tr>
-        <th>Nom</th><th>Prénoms</th><th>Classe</th><th>Paiements</th>
-      </tr></thead>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Prénoms</th>
+          <th>Classe</th>
+          <th>Téléphone tuteur</th>
+          <th>Prix scolarité (FCFA)</th>
+          <th>Paiements</th>
+        </tr>
+      </thead>
       <tbody>
         {% for e in eleves %}
         <tr>
-          <td>{{ e.nom }}</td><td>{{ e.prenoms }}</td><td>{{ e.classe }}</td>
+          <td>{{ e.nom }}</td>
+          <td>{{ e.prenoms }}</td>
+          <td>{{ e.classe }}</td>
+          <td>{{ e.contact }}</td>
+          <td>{{ "{:,}".format(e.prix_scolarite).replace(',', ' ') }} FCFA</td>
           <td>{{ e.paiements|length }} enregistré(s)</td>
         </tr>
         {% endfor %}
