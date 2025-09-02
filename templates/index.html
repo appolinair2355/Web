@@ -1,29 +1,9 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <title>Mont Sion de Bapkerou</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <header>
-    <h1>École Mont Sion de Bapkerou</h1>
-  </header>
-
-  <main>
-    <h2 style="text-align:center;margin-bottom:40px;">Bienvenue sur le portail d’administration</h2>
-
-    <div class="btn-grid">
-      <a class="btn-large" href="{{ url_for('inscription') }}">Inscription</a>
-      <a class="btn-large" href="{{ url_for('liste') }}">Liste des apprenants</a>
-      <a class="btn-large" href="{{ url_for('scolarite') }}">Scolarité</a>
-      <a class="btn-large" href="{{ url_for('note') }}">Notes</a>
-      <a class="btn-large" href="{{ url_for('import_export') }}">Import / Export</a>
-    </div>
-  </main>
-
-  <footer>
-    Développé par Sossou Kouamé Appolinaire
-  </footer>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-4">Bienvenue à l'École Mont Sion</h1>
+  <p class="lead">Gestion complète des élèves, paiements et notes.</p>
+  <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2"><i class="fas fa-user-plus"></i> Inscrire un élève</a>
+  <a href="{{ url_for('students') }}" class="btn btn-outline-primary btn-lg"><i class="fas fa-users"></i> Voir la liste</a>
+</div>
+{% endblock %}
